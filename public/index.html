@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html >
+  <head>
+    <meta charset="UTF-8">
+    <title>勉強自慢</title>
+    
+    <link rel="stylesheet" href="dist/normalize.min.js">
+    <link rel="manifest" href="manifest.json">
+    <link rel='stylesheet' href='dist/onsenui/css/onsenui.min.css'>
+    <link rel='stylesheet' href='dist/onsenui/css/onsen-css-components.min.css'>
+    <link rel="stylesheet" href="dist/style.css">
+  </head>
+
+  <body>
+    <div id="app"></div>
+
+    <template id="nav">
+      <v-ons-navigator :page-stack="pageStack">
+        <component :is="page" v-for="page in pageStack" :page-stack="pageStack" @push="pageStack = [...pageStack, $event]"></component>
+      </v-ons-navigator>
+    </template>
+
+    <template id="home">
+      <v-ons-page data-page="home">
+        <custom-bar title="Home">
+          <v-ons-toolbar-button @click="notification">
+            <v-ons-icon icon="ion-ios-bell"></v-ons-icon>
+          </v-ons-toolbar-button>
+        </custom-bar>
+        <div>
+          <v-ons-button modifier="red" @click="jiman"></v-ons-button>
+          <v-ons-button @click="backnumber" modifier="normal">バックナンバー</v-ons-button>
+          <v-ons-button @click="addTest" modifier="normal">テスト追加</v-ons-button>
+          <v-ons-button @click="register" modifier="small">登録情報</v-ons-button>
+          <v-ons-button @click="goToAbout" modifier="small">このアプリについて
+          </v-ons-button>
+        </div>
+      </v-ons-page>
+    </template>
+    <template id="first">
+      <v-ons-page data-page="first">
+        <custom-bar title="Welcome!"></custom-bar>
+        <div class="btns">
+          <p>鍵はありますか？</p>
+          <v-ons-button modifier="large cta" @click="goToUseKey">ありますねぇ！</v-ons-button>
+          <v-ons-button modifier="large" @click="goToGenKey">ないです。</v-ons-button>
+        </div>
+      </v-ons-page>
+    </template>
+
+ <template id="generateKey">
+      <v-ons-page data-page="generateKey">
+        <custom-bar title="鍵生成"></custom-bar>
+        <div class="touchArea" ref="touchArea">
+          <p v-show="cnt<13">
+            たくさんスワイプしてセキュリティを高めましょう<br>
+            <small v-show="sensorAvailable">または端末を振りましょう</small>
+          </p>
+          <p v-show="cnt>=13">計算中<br><small>少し時間がかかるかもです</small></p> 
+          <v-ons-progress-bar :value="cnt/13*100"></v-ons-progress-bar>
+        </div>
+      </v-ons-page>
+    </template>
+    <template id="noteKey">
+      <v-ons-page data-page="noteKey">
+        <custom-bar title="キーを書き留める"></custom-bar>
+        <div>
+          このパスフレーズを書き留めてください<br>
+          これを無くしたりお漏らししたら、データが消えます。<br>
+          <textarea name="" id="" cols="30" rows="10" disabled="disabled">{{wordsToShow}}</textarea><br>
+               <v-ons-button modifier="large" @click="done">Done</v-ons-button>
+        </div>
+      </v-ons-page>
+    </template>
+    <template id="useKey">
+      <v-ons-page data-page="useKey">
+        <custom-bar title="キーを使う"></custom-bar>
+        <div>
+          <textarea v-model="words" @change="again=false" id="" cols="30" rows="10" placeholder="Type your key here."></textarea>
+          <p v-show="again">単語が間違っています。もう一回打ち直してください</p>
+          <v-ons-button modifier="large" @click="next">Next</v-ons-button>
+        </div>
+        
+      </v-ons-page>
+    </template>
+    
+    <template id="register">
+      <v-ons-page data-page="register">
+        <custom-bar title="登録"></custom-bar>
+        <div>
+          ユーザー登録をしましょう。
+          <v-ons-input placeholder="名前" v-model="name"></v-ons-input>
+          <v-ons-input placeholder="学校コード" v-model="school"></v-ons-input>
+          <v-ons-button modifier="" @click="register">登録</v-ons-button>
+          学校コードとは、学校を識別するための数字である。大学入試センターが発行する高校コードを指定することが望ましいが、整数ならば参加者同士で予め決めておけばなんでも良い。
+        </div>
+      </v-ons-page>
+    </template>
+    <template id="jimanForm">
+      <v-ons-page data-page="jimanForm">
+        <custom-bar title="自慢フォーム"></custom-bar>
+        <div>
+          <v-ons-list>
+            <v-ons-list-header>テスト</v-ons-list-header>
+            <v-ons-list-item>
+              <v-ons-select v-model="testName">
+                <option v-for="itm in result" :value="itm.testName">{{itm.testName}}</option>
+              </v-ons-select>
+            </v-ons-list-item>
+            <v-ons-list-header>科目</v-ons-list-header>
+            <v-ons-list-item>
+              <v-ons-select v-model="subject">
+                <option v-for="itm in subjects" :value="itm">{{itm}}</option>
+              </v-ons-select>
+            </v-ons-list-item>
+             <v-ons-list-header>点数</v-ons-list-header>
+             <v-ons-list-item><v-ons-input placeholder="点数" type="number" v-model="score"></v-ons-input></v-ons-list-item>
+          </v-ons-list>
+          <v-ons-button @click="submit">自慢する！</v-ons-button>
+          <v-ons-modal :visible="loading"></v-ons-modal>
+        </div>
+      </v-ons-page>
+    </template>
+
+    <template id="backnumber">
+      <v-ons-page data-page="backnumber">
+        <custom-bar title="バックナンバー"></custom-bar>
+        <div>
+          <v-ons-list>
+            <v-ons-list-item v-for="tName in testList" @click="goToDetail(tName)">{{tName}}</v-ons-list-item>
+          </v-ons-list>
+        </div>
+      </v-ons-page>
+    </template>
+    <template id="detail">
+      <v-ons-page data-page="detail">
+        <custom-bar title="詳細"></custom-bar>
+        <div>
+          <h1>{{testName}}</h1>
+          <v-ons-input placeholder="名前で絞り込み" v-model="filterByName"></v-ons-input>
+          <v-ons-input placeholder="科目で絞り込み" v-model="filterBySubject"></v-ons-input>
+          <table>
+            <thead>
+              <tr>
+                <th>名前</th>
+                <th>科目</th>
+                <th>点数</th>
+                <th>いいね</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in result" key="item" v-show="filter(item)">
+                <td>{{item.name}}</td>
+                <td>{{item.subject}}</td>
+                <td>{{item.score}}</td>
+                <td @click='item.like++' :class='{"liked":!!item.like}'><v-ons-icon icon="ion-heart"></v-ons-icon>{{item.like}}</td>
+              </tr>
+            </tbody>
+          </table>
+          <hr/>
+          現在表示している点数の平均は{{analyzed.average}}<br>
+          現在表示している点数の中央値は{{analyzed.median}}<br>
+          現在表示している点数の分散は{{analyzed.variance}}<br>
+          現在表示している点数の標準偏差は{{analyzed.deviation}}<br>
+          点数" <v-ons-input v-model="devScore" placeholder="ここに数値を入力"></v-ons-input> "の偏差値は{{stdScore}}
+        </div>
+      </v-ons-page>
+    </template>
+    <template id="addTest">
+      <v-ons-page data-page="addTest">
+        <custom-bar title="テスト開始"></custom-bar>
+        <div>
+          <v-ons-list>
+            <v-ons-list-header>テスト名</v-ons-list-header>
+            <v-ons-list-item><v-ons-input placeholder="テスト名" v-model="testName"></v-ons-input></v-ons-list-item>
+            <v-ons-list-header>科目</v-ons-list-header>
+            <v-ons-list-item v-for="i in subjects" @click="removeSub(i)">{{i}}</v-ons-list-item>
+            <v-ons-list-item>
+              <v-ons-input placeholder="科目を入力" v-model="addingSub" @keydown.enter="addSubject"></v-ons-input>
+            </v-ons-list-item>
+            <v-ons-list-item @click="addSubject">追加</v-ons-list-item>
+            <v-ons-list-header>何日後に締め切るか</v-ons-list-header>
+            <v-ons-list-item><v-ons-input placeholder="何日後に締め切るか" type="number" v-model="deadline"></v-ons-input></v-ons-list-item>
+          </v-ons-list>
+          <v-ons-button @click="submit">テスト作成</v-ons-button>
+        </div>
+      </v-ons-page>
+    </template>
+    <template id="notification">
+      <v-ons-page data-page="notification">
+        <custom-bar title="通知"></custom-bar>
+        <div>
+          <v-ons-card>
+            <div class="title">Information</div>
+            <div class="description">この画面は通知画面です。最高得点を獲得したり、新しいテストが開始されたら通知が表示されます。</div>
+          </v-ons-card>
+        </div>
+      </v-ons-page>
+    </template>
+    
+    <template id="customBar">
+      <v-ons-toolbar>
+        <div class="left">
+          <v-ons-back-button></v-ons-back-button>
+        </div>
+        <div class="center">{{title}}</div>
+        <div class="right">
+          <slot></slot>
+        </div>
+      </v-ons-toolbar>
+    </template>
+    <template id="about">
+      <v-ons-page data-page="about">
+        <custom-bar title="このアプリは"></custom-bar>
+        <div>
+          <h1>勉強自慢</h1>
+          <p>勉強を自慢するためのアプリです♡
+            自慢のロゴはhttps://github.com/Rare25/5000choyenからお借りしました。ありがとうございます。<br>
+            寄付ください<br>
+            Monacoin:MKSunF7Lw6Dwn1YVWKoGjD7gLXQzYWVtRP<br>
+            Bitcoin:<a href="bitcoin:1Ev6sBCioY5q6ddZGTDoSRAM6GjyDu77Mc">1Ev6sBCioY5q6ddZGTDoSRAM6GjyDu77Mc</a>
+          </p>
+        </div>
+      </v-ons-page>
+    </template>
+    <script src="cordova.js"></script>
+    <script src="dist/vue.min.js"></script>
+    <script src='dist/onsenui/js/onsenui.min.js'></script>
+    <script src='dist/onsenui/vue-onsenui.min.js'></script>
+
+    <script src="dist/main.js"></script>
+
+  </body>
+</html>

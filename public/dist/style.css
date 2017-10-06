@@ -1,0 +1,42 @@
+[data-page=register] ons-input {
+  margin: 10px;
+  display: block;
+  border: rgba(0, 0, 0, 0.3) 1px solid;
+  border-radius: 3px;
+  padding: 4px; }
+
+[data-page=register] ons-button {
+  margin: 15px;
+  display: block; }
+
+[data-page=home] {
+  text-align: center; }
+  [data-page=home] .button--red {
+    background-color: #ff0000;
+    background-image: url(res/jiman.png);
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    padding: 40px; }
+  [data-page=home] ons-button {
+    display: block;
+    margin: 20px;
+    padding: 40px; }
+  [data-page=home] .button--small {
+    padding: 10px; }
+
+[data-page="first"] .btns {
+  margin: 10px; }
+  [data-page="first"] .btns ons-button {
+    margin: 10px 0; }
+
+[data-page="generateKey"] .touchArea {
+  height: 50%;
+  background: #889464;
+  color: white;
+  font-size: 2em;
+  text-align: center;
+  padding: 30% 10%; }
+
+[data-page=detail] .liked {
+  color: pink; }
